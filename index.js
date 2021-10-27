@@ -13,9 +13,11 @@ const web3 = new Web3(config.chains[process.env.CHAIN].rpcUrls)
 
 const Weapon = new web3.eth.Contract(require('./contracts/Weapons'), config.chains[process.env.CHAIN].VUE_APP_WEAPON_CONTRACT_ADDRESS)
 
+const maxAttempts = 5
 let data = []
 let privateKey = ''
 let index = 0
+let attempts = 0
 
 async function distribute () {
   if (index > data.length) {
@@ -24,6 +26,10 @@ async function distribute () {
   }
   if (!data.length || !data[index]) {
     console.log(blue(moment().format('LTS')), '|', red('No data.'))
+    process.exit(0)
+  }
+  if (attempts > maxAttempts) {
+    console.log(blue(moment().format('LTS')), '|', red('Too many failed transactions.'))
     process.exit(0)
   }
 
@@ -43,10 +49,12 @@ async function distribute () {
   try {
     const signed = await web3.eth.accounts.signTransaction(options, privateKey)
     await web3.eth.sendSignedTransaction(signed.rawTransaction)
-    console.log(blue(moment().format('LTS')), '|', green(`Successfully sent ${fStars}-star weapon to ${address}.`))
+    console.log(blue(moment().format('LTS')), '|', green(`Successfully sent ${fStars + 1}-star weapon to ${address}.`))
+    attempts = 0
     index += 1
   } catch (e) {
-    console.log(blue(moment().format('LTS')), '|', red(`Failed to send ${fStars}-star weapon to ${address}. Trying again.`))
+    console.log(blue(moment().format('LTS')), '|', red(`Failed to send ${fStars + 1}-star weapon to ${address}. Trying again.`))
+    attempts += 1
   }
   distribute()
 }
