@@ -84,7 +84,7 @@ function init () {
     const line = i.split(',')
     return {
       address: line[0],
-      stars: line[2]
+      stars: line[1]
     }
   })
   distribute()
