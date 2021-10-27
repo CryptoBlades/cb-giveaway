@@ -9,7 +9,7 @@ require('dotenv').config()
 const config = require('./config/index')
 
 const file = path.join(__dirname, '/entries.csv')
-const web3 = new Web3('https://http-mainnet.hecochain.com')
+const web3 = new Web3(config.chains[process.env.CHAIN].rpcUrls)
 
 const Weapon = new web3.eth.Contract(require('./contracts/Weapons'), config.chains[process.env.CHAIN].VUE_APP_WEAPON_CONTRACT_ADDRESS)
 
