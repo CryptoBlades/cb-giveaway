@@ -3,12 +3,16 @@ const fs = require('fs')
 const path = require('path')
 const { blue, green, red, cyan } = require('chalk')
 const moment = require('moment')
+const yargs = require('yargs/yargs')
+const { hideBin } = require('yargs/helpers')
+const argv = yargs(hideBin(process.argv)).argv
 
 require('dotenv').config()
 
 const config = require('./config/index')
 
 const file = path.join(__dirname, '/entries.csv')
+const testFile = path.join(__dirname, '/test.csv')
 const web3 = new Web3(config.chains[process.env.CHAIN].rpcUrls)
 
 const Weapon = new web3.eth.Contract(require('./contracts/Weapons'), config.chains[process.env.CHAIN].VUE_APP_WEAPON_CONTRACT_ADDRESS)
@@ -61,10 +65,13 @@ async function distribute () {
 
 function init () {
   privateKey = process.env.WALLET_PRIVATE_KEY
-  const list = fs.readFileSync(file, 'ascii').split('\n')
+
+  let list = fs.readFileSync(file, 'ascii').split('\n')
+
+  if (argv.test) list = fs.readFileSync(testFile, 'ascii').split('\n')
 
   if (!list || !list.length) {
-    console.log(blue(moment().format('LTS')), '|', red('File \'entries.csv\' is empty.'))
+    console.log(blue(moment().format('LTS')), '|', red('File is empty.'))
     process.exit(0)
   }
 

@@ -8,4 +8,5 @@ Create a `.env` file with the following:
 
 ## Run
 
-- `node .`
+- `node .` - to run the script
+- `node . --test` - to run the test
