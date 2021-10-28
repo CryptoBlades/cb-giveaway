@@ -1,7 +1,7 @@
 const Web3 = require('web3')
 const fs = require('fs')
 const path = require('path')
-const { blue, green, red, cyan } = require('chalk')
+const { blue, green, red, cyan, yellow } = require('chalk')
 const moment = require('moment')
 const yargs = require('yargs/yargs')
 const { hideBin } = require('yargs/helpers')
@@ -11,20 +11,22 @@ require('dotenv').config()
 
 const config = require('./config/index')
 
-const file = path.join(__dirname, '/entries.csv')
-const testFile = path.join(__dirname, '/test.csv')
+const file = path.join(__dirname, '/data/entries.csv')
+const doneFile = path.join(__dirname, '/data/done.csv')
+const testFile = path.join(__dirname, '/data/test.csv')
 const web3 = new Web3(config.chains[process.env.CHAIN].rpcUrls[0])
 
 const Weapon = new web3.eth.Contract(require('./contracts/Weapons'), config.chains[process.env.CHAIN].VUE_APP_WEAPON_CONTRACT_ADDRESS)
 
 const maxAttempts = 5
 let data = []
+let done = []
 let privateKey = ''
 let index = 0
 let attempts = 0
 
 async function distribute () {
-  if (index > data.length) {
+  if (index >= data.length) {
     console.log(blue(moment().format('LTS')), '|', cyan('Finished.'))
     process.exit(0)
   }
@@ -41,6 +43,13 @@ async function distribute () {
 
   const fStars = (stars === 3 ? Math.floor(Math.random() * 3) : stars - 1)
 
+  if (done.filter(i => i.address === address && i.stars === stars).length > 0) {
+    console.log(blue(moment().format('LTS')), '|', yellow(`Duplicate detected | ${fStars + 1}-star weapon to ${address}.`))
+    attempts = 0
+    index += 1
+    return distribute()
+  }
+
   const transaction = Weapon.methods.mintGiveawayWeapon(address, fStars, 100)
 
   const options = {
@@ -54,6 +63,8 @@ async function distribute () {
     const signed = await web3.eth.accounts.signTransaction(options, privateKey)
     await web3.eth.sendSignedTransaction(signed.rawTransaction)
     console.log(blue(moment().format('LTS')), '|', green(`Successfully sent ${fStars + 1}-star weapon to ${address}.`))
+    done.push(data[index])
+    fs.appendFileSync(doneFile, `${address},${stars}`)
     attempts = 0
     index += 1
   } catch (e) {
@@ -67,6 +78,7 @@ function init () {
   privateKey = process.env.WALLET_PRIVATE_KEY
 
   let list = fs.readFileSync(file, 'ascii').split('\n')
+  const dlist = fs.readFileSync(doneFile, 'ascii').split('\n')
 
   if (argv.test) list = fs.readFileSync(testFile, 'ascii').split('\n')
 
@@ -87,6 +99,16 @@ function init () {
       stars: line[1]
     }
   })
+
+  if (dlist.length > 0) {
+    done = dlist.map(i => {
+      const line = i.split(',')
+      return {
+        address: line[0],
+        stars: line[1]
+      }
+    })
+  }
   distribute()
 }
 
