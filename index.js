@@ -64,7 +64,7 @@ async function distribute () {
     await web3.eth.sendSignedTransaction(signed.rawTransaction)
     console.log(blue(moment().format('LTS')), '|', green(`Successfully sent ${fStars + 1}-star weapon to ${address}.`))
     done.push(data[index])
-    fs.appendFileSync(doneFile, `${address},${stars}`)
+    fs.appendFileSync(doneFile, `${address},${stars}\n`)
     attempts = 0
     index += 1
   } catch (e) {
@@ -92,7 +92,7 @@ function init () {
     process.exit(0)
   }
 
-  data = list.map(i => {
+  data = list.filter(i => i).map(i => {
     const line = i.split(',')
     return {
       address: line[0],
@@ -101,7 +101,7 @@ function init () {
   })
 
   if (dlist.length > 0) {
-    done = dlist.map(i => {
+    done = dlist.filter(i => i).map(i => {
       const line = i.split(',')
       return {
         address: line[0],
