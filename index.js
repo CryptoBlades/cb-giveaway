@@ -96,7 +96,7 @@ function init () {
     const line = i.split(',')
     return {
       address: line[0],
-      stars: line[1]
+      stars: parseInt(line[1])
     }
   })
 
@@ -105,7 +105,7 @@ function init () {
       const line = i.split(',')
       return {
         address: line[0],
-        stars: line[1]
+        stars: parseInt(line[1])
       }
     })
   }
