@@ -1,6 +1,7 @@
 const Web3 = require('web3')
 const fs = require('fs-extra')
 const path = require('path')
+const random = require('random')
 const { blue, green, red, cyan, yellow } = require('chalk')
 const moment = require('moment')
 const yargs = require('yargs/yargs')
@@ -39,6 +40,7 @@ let done = []
 let privateKey = ''
 let index = 0
 let attempts = 0
+const probability = [...Array(1).fill(4), ...Array(5).fill(3), ...Array(15).fill(2), ...Array(35).fill(1), ...Array(44).fill(0)]
 
 async function distribute () {
   if (index >= data.length) {
@@ -56,7 +58,7 @@ async function distribute () {
 
   const { address, nftType, stars } = data[index]
 
-  const fStars = (stars === '*' ? Math.floor(Math.random() * 5) : Number(stars) - 1)
+  const fStars = (stars === '*' ? probability[random.int(0, 99)] : Number(stars) - 1)
 
   if (done.filter(i => i.address === address && nftType === i.nftType && i.stars === stars).length > 0) {
     console.log(blue(moment().format('LTS')), '|', yellow(`Duplicate detected | ${fStars + 1}-star ${nftType} to ${address}.`))
@@ -79,7 +81,7 @@ async function distribute () {
     await web3.eth.sendSignedTransaction(signed.rawTransaction)
     console.log(blue(moment().format('LTS')), '|', green(`Successfully sent ${fStars + 1}-star ${nftType} to ${address}.`))
     done.push(data[index])
-    fs.appendFileSync(doneFile, `${address},${stars}\n`)
+    fs.appendFileSync(doneFile, `${address},${nftType},${stars}\n`)
     attempts = 0
     index += 1
   } catch (e) {
@@ -112,7 +114,7 @@ function init () {
     return {
       address: line[0],
       nftType: line[1],
-      stars: line[2]
+      stars: line[2].trim()
     }
   })
 
@@ -122,7 +124,7 @@ function init () {
       return {
         address: line[0],
         nftType: line[1],
-        stars: line[2]
+        stars: line[2].trim()
       }
     })
   }
