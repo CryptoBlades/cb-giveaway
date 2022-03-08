@@ -58,7 +58,7 @@ async function distribute () {
 
   const fStars = (stars === '*' ? Math.floor(Math.random() * 5) : Number(stars) - 1)
 
-  if (done.filter(i => i.address === address && i.stars === stars).length > 0) {
+  if (done.filter(i => i.address === address && nftType === i.nftType && i.stars === stars).length > 0) {
     console.log(blue(moment().format('LTS')), '|', yellow(`Duplicate detected | ${fStars + 1}-star ${nftType} to ${address}.`))
     attempts = 0
     index += 1
@@ -112,7 +112,7 @@ function init () {
     return {
       address: line[0],
       nftType: line[1],
-      stars: line[2].trim()
+      stars: line[2]
     }
   })
 
