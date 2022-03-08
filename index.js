@@ -56,7 +56,7 @@ async function distribute () {
 
   const { address, nftType, stars } = data[index]
 
-  const fStars = (stars === '*' ? Math.floor(Math.random() * 5) : stars - 1)
+  const fStars = (stars === '*' ? Math.floor(Math.random() * 5) : Number(stars) - 1)
 
   if (done.filter(i => i.address === address && i.stars === stars).length > 0) {
     console.log(blue(moment().format('LTS')), '|', yellow(`Duplicate detected | ${fStars + 1}-star ${nftType} to ${address}.`))
@@ -91,10 +91,11 @@ async function distribute () {
 
 function init () {
   privateKey = process.env.WALLET_PRIVATE_KEY
+  fs.ensureFileSync(file)
   fs.ensureFileSync(doneFile)
 
-  const list = fs.readFileSync(file, 'ascii').split('\n')
-  const dlist = fs.readFileSync(doneFile, 'ascii').split('\n')
+  const list = fs.readFileSync(file).toString().split('\n')
+  const dlist = fs.readFileSync(doneFile).toString().split('\n')
 
   if (!list || !list.length) {
     console.log(blue(moment().format('LTS')), '|', red('File is empty.'))
@@ -111,7 +112,7 @@ function init () {
     return {
       address: line[0],
       nftType: line[1],
-      stars: parseInt(line[2])
+      stars: line[2].trim()
     }
   })
 
@@ -121,7 +122,7 @@ function init () {
       return {
         address: line[0],
         nftType: line[1],
-        stars: parseInt(line[2])
+        stars: line[2]
       }
     })
   }

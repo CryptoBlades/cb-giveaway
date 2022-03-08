@@ -26,8 +26,8 @@
 					"VUE_APP_SHIELD_CONTRACT_ADDRESS":"0xb4eD70aC5B00ca0fd9526089489979e116E45ec0",
 					"VUE_APP_MULTICALL_CONTRACT_ADDRESS":"0xCeBFbFb4Bd0d28E5a2662193e35E534ca6465f73"
 				},
-				"OKEX": {
-					"name": "OKEX",
+				"OEC": {
+					"name": "OEC",
 					"dbValue": "okex",
 					"VUE_APP_NETWORK_ID":"66",
 					"rpcUrls": ["https://exchainrpc.okex.org"],
