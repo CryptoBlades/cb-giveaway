@@ -1,5 +1,5 @@
 const Web3 = require('web3')
-const fs = require('fs')
+const fs = require('fs-extra')
 const path = require('path')
 const { blue, green, red, cyan, yellow } = require('chalk')
 const moment = require('moment')
@@ -11,12 +11,27 @@ require('dotenv').config()
 
 const config = require('./config/index')
 
-const file = path.join(__dirname, '/data/entries.csv')
-const doneFile = path.join(__dirname, '/data/done.csv')
-const testFile = path.join(__dirname, '/data/test.csv')
-const web3 = new Web3(config.chains[process.env.CHAIN].rpcUrls[0])
+let filename = 'entries'
+let network = 'BSC'
 
-const Weapon = new web3.eth.Contract(require('./contracts/Weapons'), config.chains[process.env.CHAIN].VUE_APP_WEAPON_CONTRACT_ADDRESS)
+if (argv.file) {
+  filename = argv.file
+}
+
+if (argv.network) {
+  network = argv.network
+}
+
+if (argv.test) {
+  filename = 'test'
+}
+
+const file = path.join(__dirname, `/data/${filename}.csv`)
+const doneFile = path.join(__dirname, `/data/${filename}-done.csv`)
+const web3 = new Web3(config.chains[network].rpcUrls[0])
+
+const Weapons = new web3.eth.Contract(require('./contracts/Weapons'), config.chains[network].VUE_APP_WEAPON_CONTRACT_ADDRESS)
+const Shields = new web3.eth.Contract(require('./contracts/Shields'), config.chains[network].VUE_APP_SHIELD_CONTRACT_ADDRESS)
 
 const maxAttempts = 5
 let data = []
@@ -35,25 +50,25 @@ async function distribute () {
     process.exit(0)
   }
   if (attempts > maxAttempts) {
-    console.log(blue(moment().format('LTS')), '|', red('Too many failed transactions.'))
+    console.log(blue(moment().format('LTS')), '|', red('Too many failed attempts.'))
     process.exit(0)
   }
 
-  const { address, stars } = data[index]
+  const { address, nftType, stars } = data[index]
 
-  const fStars = (stars === 3 ? Math.floor(Math.random() * 3) : stars - 1)
+  const fStars = (stars === '*' ? Math.floor(Math.random() * 5) : stars - 1)
 
   if (done.filter(i => i.address === address && i.stars === stars).length > 0) {
-    console.log(blue(moment().format('LTS')), '|', yellow(`Duplicate detected | ${fStars + 1}-star weapon to ${address}.`))
+    console.log(blue(moment().format('LTS')), '|', yellow(`Duplicate detected | ${fStars + 1}-star ${nftType} to ${address}.`))
     attempts = 0
     index += 1
     return distribute()
   }
 
-  const transaction = Weapon.methods.mintGiveawayWeapon(address, fStars, 100)
+  const transaction = (nftType === 'weapon' ? Weapons.methods.mintGiveawayWeapon(address, fStars, 100) : Shields.methods.mintGiveawayShield(address, fStars, 2))
 
   const options = {
-    to: config.chains[process.env.CHAIN].VUE_APP_WEAPON_CONTRACT_ADDRESS,
+    to: config.chains[network][(nftType === 'weapon' ? 'VUE_APP_WEAPON_CONTRACT_ADDRESS' : 'VUE_APP_SHIELD_CONTRACT_ADDRESS')],
     data: transaction.encodeABI(),
     gas: '300000',
     gasPrice: web3.utils.toWei('2.35', 'gwei')
@@ -62,13 +77,13 @@ async function distribute () {
   try {
     const signed = await web3.eth.accounts.signTransaction(options, privateKey)
     await web3.eth.sendSignedTransaction(signed.rawTransaction)
-    console.log(blue(moment().format('LTS')), '|', green(`Successfully sent ${fStars + 1}-star weapon to ${address}.`))
+    console.log(blue(moment().format('LTS')), '|', green(`Successfully sent ${fStars + 1}-star ${nftType} to ${address}.`))
     done.push(data[index])
     fs.appendFileSync(doneFile, `${address},${stars}\n`)
     attempts = 0
     index += 1
   } catch (e) {
-    console.log(blue(moment().format('LTS')), '|', red(`Failed to send ${fStars + 1}-star weapon to ${address}. Trying again.`))
+    console.log(blue(moment().format('LTS')), '|', red(`Failed to send ${fStars + 1}-star ${nftType} to ${address}. Trying again.`))
     attempts += 1
   }
   distribute()
@@ -76,11 +91,10 @@ async function distribute () {
 
 function init () {
   privateKey = process.env.WALLET_PRIVATE_KEY
+  fs.ensureFileSync(doneFile)
 
-  let list = fs.readFileSync(file, 'ascii').split('\n')
+  const list = fs.readFileSync(file, 'ascii').split('\n')
   const dlist = fs.readFileSync(doneFile, 'ascii').split('\n')
-
-  if (argv.test) list = fs.readFileSync(testFile, 'ascii').split('\n')
 
   if (!list || !list.length) {
     console.log(blue(moment().format('LTS')), '|', red('File is empty.'))
@@ -96,7 +110,8 @@ function init () {
     const line = i.split(',')
     return {
       address: line[0],
-      stars: parseInt(line[1])
+      nftType: line[1],
+      stars: parseInt(line[2])
     }
   })
 
@@ -105,7 +120,8 @@ function init () {
       const line = i.split(',')
       return {
         address: line[0],
-        stars: parseInt(line[1])
+        nftType: line[1],
+        stars: parseInt(line[2])
       }
     })
   }

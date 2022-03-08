@@ -1,6 +1,5 @@
 {
 	"environment": "production",
-    "supportedChains": [ "BSC", "HECO"],
 	"environments": {
 		"production": 
 		{
@@ -10,7 +9,6 @@
 					"dbValue": "bsc",
 					"VUE_APP_NETWORK_ID":"56",
 					"rpcUrls": ["wss://bsc-ws-node.nariox.org:443"],
-					"websocketProvider": "wss://bsc-ws-node.nariox.org:443",
 					"VUE_APP_MARKET_CONTRACT_ADDRESS":"0x90099dA42806b21128A094C713347C7885aF79e2",
 					"VUE_APP_CHARACTER_CONTRACT_ADDRESS":"0xc6f252c2CdD4087e30608A35c022ce490B58179b",
 					"VUE_APP_WEAPON_CONTRACT_ADDRESS":"0x7E091b0a220356B157131c831258A9C98aC8031A",
@@ -22,7 +20,6 @@
 					"dbValue": "heco",
 					"VUE_APP_NETWORK_ID":"128",
 					"rpcUrls": ["wss://ws-mainnet.hecochain.com"],
-					"websocketProvider": "wss://ws-mainnet.hecochain.com",
 					"VUE_APP_MARKET_CONTRACT_ADDRESS":"0x0f6dAA5F4b4277BE496c80aeCD0D101b8dEE6440",
 					"VUE_APP_CHARACTER_CONTRACT_ADDRESS":"0xF6092CDEaabd02069cB56E2b770367AAcf49dfba",
 					"VUE_APP_WEAPON_CONTRACT_ADDRESS":"0xa0f254436E43239D2B3947A9D590C495738B6A4C",
@@ -34,7 +31,6 @@
 					"dbValue": "okex",
 					"VUE_APP_NETWORK_ID":"66",
 					"rpcUrls": ["https://exchainrpc.okex.org"],
-					"websocketProvider": "wss://real.okex.com:8443/ws/v3",
 					"VUE_APP_MARKET_CONTRACT_ADDRESS":"0x5ea2373e281E92FE3c53dc36cE855D89BF25F6F8",
 					"VUE_APP_CHARACTER_CONTRACT_ADDRESS":"0x6A1d1803d4EDF5CF27EDb64ae95A22F81707eA38",
 					"VUE_APP_WEAPON_CONTRACT_ADDRESS":"0x364759180A6484e57ECD73C042264A6Da75770e8",
@@ -46,12 +42,22 @@
 					"dbValue": "polygon",
 					"VUE_APP_NETWORK_ID":"137",
 					"rpcUrls": ["https://rpc-mainnet.maticvigil.com"],
-					"websocketProvider": "wss://rpc-mainnet.maticvigil.com/ws",
 					"VUE_APP_MARKET_CONTRACT_ADDRESS":"0xeE6e8467268eA752b027676B3EBcD4eB05749874",
 					"VUE_APP_CHARACTER_CONTRACT_ADDRESS":"0x929059Fef67b88CE2F4127e59B50bEA123981998",
 					"VUE_APP_WEAPON_CONTRACT_ADDRESS":"0xD9C5449EfB3f99952F73e824688724aAFB81dE6E",
 					"VUE_APP_SHIELD_CONTRACT_ADDRESS":"0x68a288c2A96e2cd5c45769e02f2bbc2E90BAE39B",
 					"VUE_APP_MULTICALL_CONTRACT_ADDRESS":"0x35e4aA226ce52e1E59E5e5Ec24766007bCbE2e7D"
+				},
+				"AVAX": {
+					"name": "Avalanche",
+					"dbValue": "avax",
+					"VUE_APP_NETWORK_ID":"43114",
+					"rpcUrls": ["https://api.avax.network/ext/bc/C/rpc"],
+					"VUE_APP_MARKET_CONTRACT_ADDRESS":"0x9469ED8d4b86e4442b4AA848bB94B9f9130f123E",
+					"VUE_APP_CHARACTER_CONTRACT_ADDRESS":"0x28857ccCCa599f0876792094870758A18F581Dc0",
+					"VUE_APP_WEAPON_CONTRACT_ADDRESS":"0xe8f172B51186A4c8127D5eE05617dCA6aAf478fE",
+					"VUE_APP_SHIELD_CONTRACT_ADDRESS":"0x1609BD8ea43b1c23dE90071B82CD08FA098DdCF3",
+					"VUE_APP_MULTICALL_CONTRACT_ADDRESS":"0x0FB54156B496b5a040b51A71817aED9e2927912E"
 				}
 			}
 		}
