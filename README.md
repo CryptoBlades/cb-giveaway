@@ -15,6 +15,9 @@
 - `--new` - clears the progress of current entries. `optional`
 
 ## Entries format 
-Must be in `.csv` format
+Must be in `.csv` format: `address,nftType,stars,element`
 
-`address,nft type (weapon or shield),stars (1-5 or * for random),element(0 = Fire, 1 = Earth, 2 = Lightning, 3 = Water, 100 = Random)`
+- `address` - address of the receiver
+- `nftType` - `weapon` or `shield`
+- `stars` -  `1-5` or `*` for random
+- `element` - `0` = Fire, `1` = Earth, `2` = Lightning, `3` = Water, `100` = Random
