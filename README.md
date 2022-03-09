@@ -1,15 +1,15 @@
 # CB Giveaway Script
-## Setup
+## Build
 
-Create a `.env` file with the following:
-
-- `WALLET_PRIVATE_KEY` - wallet private key of the minter
+- `npm run build`
 
 ## Run
 
-- `node .` - to run the script
+- `giveaway [args]` - to run the script
 
 ## ARGS
-- `--test` - to run test entries
-- `--file` - filename of the entries
+- `--private-key` - wallet private key of the minter; `optional` if `--is-test` is `true`
+- `--is-test` - `true` or `false`; default: `true`
+- `--csv` - path to entries csv file
 - `--network={chain}` - chains: BSC, HECO, OEC, POLYGON, AVAX
+- `--new` - clears the progress of current entries. `optional`

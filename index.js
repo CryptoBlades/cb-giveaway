@@ -1,34 +1,43 @@
 const Web3 = require('web3')
 const fs = require('fs-extra')
-const path = require('path')
 const random = require('random')
 const { blue, green, red, cyan, yellow } = require('chalk')
 const moment = require('moment')
 const yargs = require('yargs/yargs')
 const { hideBin } = require('yargs/helpers')
-const argv = yargs(hideBin(process.argv)).argv
+const fetch = require('node-fetch')
+const { join } = require('path')
 
-require('dotenv').config()
+const argv = yargs(hideBin(process.argv)).argv
 
 const config = require('./config/index')
 
-let filename = 'entries'
+let entryPath = ''
+let donePath = ''
 let network = 'BSC'
+let isTest = true
 
-if (argv.file) {
-  filename = argv.file
+const ABI_URL = 'https://app.cryptoblades.io/abi/'
+const ABIS = [
+  'Weapons',
+  'Shields'
+]
+
+if (argv['is-test']) isTest = (argv['is-test'] === 'true')
+
+if (argv.csv) {
+  entryPath = argv.csv
+  donePath = join(process.cwd(), '/done.csv')
+} else {
+  console.log(blue(moment().format('LTS')), '|', red('No csv provided.'))
+  process.exit(0)
 }
 
-if (argv.network) {
-  network = argv.network
+if (argv.network) network = argv.network
+if (argv.new) {
+  fs.removeSync(donePath)
 }
 
-if (argv.test) {
-  filename = 'test'
-}
-
-const file = path.join(__dirname, `/data/${filename}.csv`)
-const doneFile = path.join(__dirname, `/data/${filename}-done.csv`)
 const web3 = new Web3(config.chains[network].rpcUrls[0])
 
 const Weapons = new web3.eth.Contract(require('./contracts/Weapons'), config.chains[network].VUE_APP_WEAPON_CONTRACT_ADDRESS)
@@ -56,18 +65,26 @@ async function distribute () {
     process.exit(0)
   }
 
-  const { address, nftType, stars } = data[index]
+  const { address, nftType, stars, element } = data[index]
 
   const fStars = (stars === '*' ? probability[random.int(0, 99)] : Number(stars) - 1)
+  const fElement = numberToElement(element)
 
-  if (done.filter(i => i.address === address && nftType === i.nftType && i.stars === stars).length > 0) {
-    console.log(blue(moment().format('LTS')), '|', yellow(`Duplicate detected | ${fStars + 1}-star ${nftType} to ${address}.`))
+  if (!fElement && nftType === 'weapon') {
+    console.log(blue(moment().format('LTS')), '|', yellow(`Invalid element | ${fStars + 1}-star ${nftType} to ${address}.`))
     attempts = 0
     index += 1
     return distribute()
   }
 
-  const transaction = (nftType === 'weapon' ? Weapons.methods.mintGiveawayWeapon(address, fStars, 100) : Shields.methods.mintGiveawayShield(address, fStars, 2))
+  if (done.filter(i => i.address === address && nftType === i.nftType && i.stars === stars).length > 0) {
+    console.log(blue(moment().format('LTS')), '|', yellow(`Duplicate detected | ${fStars + 1}-star ${fElement} ${nftType} to ${address}.`))
+    attempts = 0
+    index += 1
+    return distribute()
+  }
+
+  const transaction = (nftType === 'weapon' ? Weapons.methods.mintGiveawayWeapon(address, fStars, element) : Shields.methods.mintGiveawayShield(address, fStars, 2))
 
   const options = {
     to: config.chains[network][(nftType === 'weapon' ? 'VUE_APP_WEAPON_CONTRACT_ADDRESS' : 'VUE_APP_SHIELD_CONTRACT_ADDRESS')],
@@ -77,34 +94,36 @@ async function distribute () {
   }
 
   try {
-    const signed = await web3.eth.accounts.signTransaction(options, privateKey)
-    await web3.eth.sendSignedTransaction(signed.rawTransaction)
-    console.log(blue(moment().format('LTS')), '|', green(`Successfully sent ${fStars + 1}-star ${nftType} to ${address}.`))
+    if (!isTest) {
+      const signed = await web3.eth.accounts.signTransaction(options, privateKey)
+      await web3.eth.sendSignedTransaction(signed.rawTransaction)
+    }
+    console.log(blue(moment().format('LTS')), '|', green(`Successfully sent ${fStars + 1}-star ${fElement} ${nftType} to ${address}.`))
     done.push(data[index])
-    fs.appendFileSync(doneFile, `${address},${nftType},${stars}\n`)
+    fs.appendFileSync(donePath, `${address},${nftType},${stars}\n`)
     attempts = 0
     index += 1
   } catch (e) {
-    console.log(blue(moment().format('LTS')), '|', red(`Failed to send ${fStars + 1}-star ${nftType} to ${address}. Trying again.`))
+    console.log(blue(moment().format('LTS')), '|', red(`Failed to send ${fStars + 1}-star ${fElement} ${nftType} to ${address}. Trying again.`))
     attempts += 1
   }
   distribute()
 }
 
-function init () {
-  privateKey = process.env.WALLET_PRIVATE_KEY
-  fs.ensureFileSync(file)
-  fs.ensureFileSync(doneFile)
+async function init () {
+  if (!isTest) await updateAbi()
+  privateKey = argv['private-key']
+  fs.ensureFileSync(donePath)
 
-  const list = fs.readFileSync(file).toString().split('\n')
-  const dlist = fs.readFileSync(doneFile).toString().split('\n')
+  const list = fs.readFileSync(entryPath).toString().split('\n')
+  const dlist = fs.readFileSync(donePath).toString().split('\n')
 
   if (!list || !list.length) {
     console.log(blue(moment().format('LTS')), '|', red('File is empty.'))
     process.exit(0)
   }
 
-  if (!privateKey) {
+  if (!privateKey && !isTest) {
     console.log(blue(moment().format('LTS')), '|', red('No private key provided.'))
     process.exit(0)
   }
@@ -114,7 +133,8 @@ function init () {
     return {
       address: line[0],
       nftType: line[1],
-      stars: line[2].trim()
+      stars: line[2].trim(),
+      element: Number(line[3]) || 100
     }
   })
 
@@ -129,6 +149,31 @@ function init () {
     })
   }
   distribute()
+}
+
+async function updateAbi () {
+  console.log(blue(moment().format('LTS')), '|', cyan('Updating ABIs...'))
+  fs.ensureDirSync('./contracts/')
+  await Promise.all(
+    ABIS.map(async (name) => {
+      const contract = await fetch(`${ABI_URL}/${name}.json`).then((res) =>
+        res.json()
+      )
+      fs.writeJsonSync(`./contracts/${name}.json`, contract.abi)
+    })
+  )
+  console.log(blue(moment().format('LTS')), '|', green('ABIs updated.'))
+}
+
+function numberToElement (num) {
+  switch (num) {
+    case 0: return 'fire'
+    case 1: return 'earth'
+    case 2: return 'lightning'
+    case 3: return 'water'
+    case 100: return 'random'
+    default: return false
+  }
 }
 
 init()
