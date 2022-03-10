@@ -34,7 +34,7 @@ if (argv.csv) {
 }
 
 if (argv.network) network = argv.network
-if (argv.new) {
+if (argv.clean) {
   fs.removeSync(donePath)
 }
 
@@ -111,7 +111,7 @@ async function distribute () {
 }
 
 async function init () {
-  if (!isTest) await updateAbi()
+  await updateAbi()
   privateKey = argv['private-key']
   fs.ensureFileSync(donePath)
 
