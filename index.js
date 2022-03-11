@@ -34,7 +34,7 @@ if (argv.csv) {
 }
 
 if (argv.network) network = argv.network
-if (argv.clean) {
+if (argv.new) {
   fs.removeSync(donePath)
 }
 
