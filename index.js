@@ -89,8 +89,8 @@ async function distribute () {
   const options = {
     to: config.chains[network][(nftType === 'weapon' ? 'VUE_APP_WEAPON_CONTRACT_ADDRESS' : 'VUE_APP_SHIELD_CONTRACT_ADDRESS')],
     data: transaction.encodeABI(),
-    gas: '300000',
-    gasPrice: web3.utils.toWei('2.35', 'gwei')
+    gas: config.chains[network].GAS_LIMIT,
+    gasPrice: web3.utils.toWei(config.chains[network].GAS_PRICE, 'gwei')
   }
 
   try {
